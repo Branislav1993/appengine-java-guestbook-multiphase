@@ -70,7 +70,7 @@
 <%
       // Look at all of our greetings
         for (Greeting greeting : greetings) {
-            pageContext.setAttribute("greeting_content", greeting.content);
+            pageContext.setAttribute("greeting_content", "Your website is awesome!" + greeting.content);
             String author;
             if (greeting.author_email == null) {
                 author = "An anonymous person";
