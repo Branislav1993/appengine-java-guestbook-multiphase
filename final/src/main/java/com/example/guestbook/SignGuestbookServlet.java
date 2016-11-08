@@ -17,22 +17,17 @@
 //[START all]
 package com.example.guestbook;
 
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.users.User;
-import com.google.appengine.api.users.UserService;
-import com.google.appengine.api.users.UserServiceFactory;
-
 import java.io.IOException;
-import java.util.Date;
+import java.util.List;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.appengine.api.users.User;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
+import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 
 /**
@@ -52,6 +47,8 @@ public class SignGuestbookServlet extends HttpServlet {
 		User user = userService.getCurrentUser(); // Find out who the user is.
 
 		String guestbookName = req.getParameter("guestbookName");
+		Key<Guestbook> theBook = Key.create(Guestbook.class, guestbookName);
+		
 		String content = req.getParameter("content");
 		if (user != null) {
 			greeting = new Greeting(guestbookName, content, user.getUserId(), user.getEmail());
@@ -59,6 +56,21 @@ public class SignGuestbookServlet extends HttpServlet {
 			greeting = new Greeting(guestbookName, content);
 		}
 
+		 List<Greeting> greetings = ObjectifyService.ofy()
+		          .load()
+		          .type(Greeting.class) // We want only Greetings
+		          .ancestor(theBook)    // Anyone in this book
+		          .order("-date")       // Most recent first - date is indexed.
+		          .limit(10)             // Only show 5 of them.
+		          .list();
+		    
+		    if (greetings.size() > 4) {
+		    	for (int i = 4; i < greetings.size(); i++) {
+		    		ObjectifyService.ofy().delete().entity(greetings.get(i)).now();
+		    	}
+		    }
+		    
+		
 		// Use Objectify to save the greeting and now() is used to make the call
 		// synchronously as we will immediately get a new page using redirect
 		// and we want the data to be present.

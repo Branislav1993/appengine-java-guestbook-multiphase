@@ -59,7 +59,7 @@
           .order("-date")       // Most recent first - date is indexed.
           .limit(10)             // Only show 5 of them.
           .list();
-
+    
     if (greetings.isEmpty()) {
 %>
 <p>Guestbook '${fn:escapeXml(guestbookName)}' has no messages.</p>
